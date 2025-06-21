@@ -91,3 +91,56 @@ class ManejadorVacaciones:
                 boton_vact.config(state=tk.DISABLED)
                 messagebox.showinfo("Límite Alcanzado", "El período Junio-Julio ha alcanzado el límite de solicitudes")
 
+def vacaciones_cuatro(self):
+        global contadorcu, boton_vacc
+        contadorcu += 1
+        if contadorcu >= 3:
+            if boton_vacc:
+                boton_vacc.config(state=tk.DISABLED)
+                messagebox.showinfo("Límite Alcanzado", "El período Nov-Dic ha alcanzado el límite de solicitudes ")
+
+    def _obtener_contador_global(self, periodo):
+        global contadorun, contadordo, contadortr, contadorcu
+        if periodo == "Enero-Febrero":
+            return contadorun
+        elif periodo == "Marzo-Abril":
+            return contadordo
+        elif periodo == "Junio-Julio":
+            return contadortr
+        elif periodo == "Nov-Dic":
+            return contadorcu
+        return 0
+
+    def _actualizar_estado_botones_vacaciones(self):
+        indice_seleccionado = self.combobox_trabajadores.current()
+        trabajador_seleccionado = None
+        global nombres_para_combobox_vacaciones
+
+        texto_seleccionado = self.combobox_trabajadores.get()
+        if texto_seleccionado and texto_seleccionado != "No hay empleados registrados aún":
+            for t in lista_trabajadores_registrados:
+                if t.obtener_texto_para_lista() == texto_seleccionado:
+                    trabajador_seleccionado = t
+                    break
+
+        periodos_orden = ["Enero-Febrero", "Marzo-Abril", "Junio-Julio", "Nov-Dic"]
+        global_buttons = [boton_vacu, boton_vacd, boton_vact, boton_vacc]
+
+        for i, periodo in enumerate(periodos_orden):
+            btn = global_buttons[i]
+            if btn is None:
+                continue
+
+            contador_global_actual = self._obtener_contador_global(periodo)
+            limite_global_alcanzado = (contador_global_actual >= 3)
+
+            limite_individual_alcanzado = False
+            if trabajador_seleccionado:
+                limite_individual_alcanzado = (
+                            trabajador_seleccionado.obtener_conteo_vacaciones_individual(periodo) >= 3)
+
+            if not trabajador_seleccionado or not trabajador_seleccionado.habilitado or limite_global_alcanzado or limite_individual_alcanzado:
+                btn.config(state=tk.DISABLED)
+            else:
+                btn.config(state=tk.NORMAL)
+
