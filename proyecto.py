@@ -143,4 +143,116 @@ def vacaciones_cuatro(self):
                 btn.config(state=tk.DISABLED)
             else:
                 btn.config(state=tk.NORMAL)
+def _accion_combinada_vacacion(self, periodo, tu_funcion_original):
+        seleccion_combobox_texto = self.combobox_trabajadores.get()
 
+        if not seleccion_combobox_texto or seleccion_combobox_texto == "No hay empleados registrados aún" or \
+                seleccion_combobox_texto == "Seleccione un empleado...":
+            messagebox.showwarning("Error", "Por favor, seleccione un empleado primero.")
+            return
+
+        trabajador_seleccionado = None
+        for t in lista_trabajadores_registrados:
+            if t.obtener_texto_para_lista() == seleccion_combobox_texto:
+                trabajador_seleccionado = t
+                break
+
+        if not trabajador_seleccionado:
+            messagebox.showerror("Error", "No se pudo encontrar el empleado seleccionado.")
+            return
+
+        if not trabajador_seleccionado.habilitado:
+            messagebox.showwarning("Inhabilitado",f"'{trabajador_seleccionado.nombre}' está inhabilitado y no puede solicitar vacaciones.")
+            return
+
+        contador_global_antes = self._obtener_contador_global(periodo)
+
+        tu_funcion_original()
+
+        if self._obtener_contador_global(periodo) >= 3 and contador_global_antes < 3:
+            self._actualizar_estado_botones_vacaciones()
+            return
+
+        if trabajador_seleccionado.registrar_vacaciones_individual(periodo):
+            mensaje_historial_simple = f"Vacación de {periodo} registrada para {trabajador_seleccionado.nombre}."
+            historial_actividades.append(mensaje_historial_simple)
+            messagebox.showinfo("Vacaciones Registradas",f"Vacaciones para '{trabajador_seleccionado.nombre}' registradas en '{periodo}'.\n"f"Este empleado lleva {trabajador_seleccionado.obtener_conteo_vacaciones_individual(periodo)} solicitudes \n")
+        else:
+            messagebox.showwarning("Límite Individual Alcanzado",f"'{trabajador_seleccionado.nombre}' ya ha alcanzado su límite de 3 solicitudes para el período '{periodo}'.")
+
+        self._actualizar_estado_botones_vacaciones()
+
+    def abrir_ventana_vacaciones(self):
+        global boton_vacu, boton_vacd, boton_vact, boton_vacc
+        global nombres_para_combobox_vacaciones
+
+        self.ventana_principal.withdraw()
+
+        self.ventana_vacaciones = tk.Toplevel(self.ventana_principal)
+        self.ventana_vacaciones.title("Gestión de Vacaciones - Hospital XYZ")
+        self.ventana_vacaciones.state('zoomed')
+        self.ventana_vacaciones.configure(bg=COLOR_FONDO_CLARO)
+
+        tk.Label(self.ventana_vacaciones, text="Fechas de Vacaciones Disponibles", font=FUENTE_TITULO, bg=COLOR_FONDO_CLARO, fg=COLOR_TEXTO_GENERAL).pack(pady=20)
+
+        tk.Label(self.ventana_vacaciones, text="Seleccione un Empleado:", font=FUENTE_SUBTITULO, bg=COLOR_FONDO_CLARO,fg=COLOR_TEXTO_GENERAL).pack(pady=10)
+
+        nombres_para_combobox_vacaciones = [t.obtener_texto_para_lista() for t in lista_trabajadores_registrados]
+        if not nombres_para_combobox_vacaciones:
+            nombres_para_combobox_vacaciones = ["No hay empleados registrados aún"]
+
+        self.combobox_trabajadores = ttk.Combobox(self.ventana_vacaciones, values=nombres_para_combobox_vacaciones,state="readonly", font=FUENTE_ETIQUETA, width=40)
+        self.combobox_trabajadores.pack(pady=10, ipadx=5, ipady=5)
+
+        if nombres_para_combobox_vacaciones and nombres_para_combobox_vacaciones[
+            0] != "No hay empleados registrados aún":
+            self.combobox_trabajadores.current(0)
+        else:
+            self.combobox_trabajadores.set("No hay empleados registrados aún")
+            self.combobox_trabajadores.config(state="disabled")
+
+        self.combobox_trabajadores.bind("<<ComboboxSelected>>", lambda event: self._actualizar_estado_botones_vacaciones())
+
+        tk.Label(self.ventana_vacaciones, text="Períodos de Solicitud de Vacaciones:", font=FUENTE_SUBTITULO, bg=COLOR_FONDO_CLARO, fg=COLOR_TEXTO_GENERAL).pack(pady=15)
+
+        global boton_vacu, boton_vacd, boton_vact, boton_vacc
+        boton_vacu = tk.Button(self.ventana_vacaciones, text="Enero - Febrero",command=lambda: self._accion_combinada_vacacion("Enero-Febrero", self.vacaciones_uno),font=FUENTE_BOTON_NORMAL, bg=COLOR_BOTON_ACCION, fg=COLOR_TEXTO_BOTON, width=25,height=1, relief="raised", bd=3)
+        boton_vacu.pack(pady=7)
+
+        boton_vacd = tk.Button(self.ventana_vacaciones, text="Marzo - Abril",command=lambda: self._accion_combinada_vacacion("Marzo-Abril", self.vacaciones_dos), font=FUENTE_BOTON_NORMAL, bg=COLOR_BOTON_ACCION, fg=COLOR_TEXTO_BOTON, width=25, height=1, relief="raised", bd=3)
+        boton_vacd.pack(pady=7)
+
+        boton_vact = tk.Button(self.ventana_vacaciones, text="Junio - Julio",command=lambda: self._accion_combinada_vacacion("Junio-Julio", self.vacaciones_tres),font=FUENTE_BOTON_NORMAL, bg=COLOR_BOTON_ACCION, fg=COLOR_TEXTO_BOTON, width=25,height=1, relief="raised", bd=3)
+        boton_vact.pack(pady=7)
+
+        boton_vacc = tk.Button(self.ventana_vacaciones, text="Noviembre - Diciembre",command=lambda: self._accion_combinada_vacacion("Nov-Dic", self.vacaciones_cuatro),font=FUENTE_BOTON_NORMAL, bg=COLOR_BOTON_ACCION, fg=COLOR_TEXTO_BOTON, width=25,height=1, relief="raised", bd=3)
+        boton_vacc.pack(pady=7)
+
+        self._actualizar_estado_botones_vacaciones()
+
+        def volver_a_principal():
+            self.ventana_vacaciones.destroy()
+            self.ventana_principal.deiconify()
+
+        tk.Button(self.ventana_vacaciones, text="Volver al Menú Principal", command=volver_a_principal, font=FUENTE_BOTON_NORMAL, bg=COLOR_BOTON_VOLVER, fg=COLOR_TEXTO_BOTON, width=20, height=1,relief="raised", bd=3).pack(pady=25)
+        self.ventana_vacaciones.protocol("WM_DELETE_WINDOW", volver_a_principal)
+
+
+def actualizar_combobox_para_turno(turno_seleccionado):
+    global global_combobox_asistencia, global_label_trabajadores_listado
+
+    nombres_trabajadores_turno = []
+    for trabajador in lista_trabajadores_registrados:
+        if trabajador.horario == turno_seleccionado and trabajador.habilitado:
+            nombres_trabajadores_turno.append(trabajador.obtener_texto_para_lista())
+
+    global_combobox_asistencia['values'] = nombres_trabajadores_turno
+
+    if nombres_trabajadores_turno:
+        global_combobox_asistencia.set("Seleccione un empleado...")
+        global_combobox_asistencia.config(state="readonly")
+        global_label_trabajadores_listado.config(text=f"Empleados en Turno {turno_seleccionado}:")
+    else:
+        global_combobox_asistencia.set("No hay empleados habilitados en este turno")
+        global_combobox_asistencia.config(state="disabled")
+        global_label_trabajadores_listado.config(text=f"No hay empleados habilitados en Turno {turno_seleccionado}")
