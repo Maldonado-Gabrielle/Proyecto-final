@@ -61,3 +61,33 @@ class Trabajador:
         return False
 
   
+class ManejadorVacaciones:
+    def __init__(self, ventana_principal):
+        self.ventana_principal = ventana_principal
+        self.ventana_vacaciones = None
+        self.combobox_trabajadores = None
+
+    def vacaciones_uno(self):
+        global contadorun, boton_vacu
+        contadorun += 1
+        if contadorun >= 3:
+            if boton_vacu:
+                boton_vacu.config(state=tk.DISABLED)
+                messagebox.showinfo("Límite Alcanzado", "El período Enero-Febrero ha alcanzado el límite de solicitudes")
+
+    def vacaciones_dos(self):
+        global contadordo, boton_vacd
+        contadordo += 1
+        if contadordo >= 3:
+            if boton_vacd:
+                boton_vacd.config(state=tk.DISABLED)
+                messagebox.showinfo("Límite Alcanzado", "El período Marzo-Abril ha alcanzado el límite de solicitudes")
+
+    def vacaciones_tres(self):
+        global contadortr, boton_vact
+        contadortr += 1
+        if contadortr >= 3:
+            if boton_vact:
+                boton_vact.config(state=tk.DISABLED)
+                messagebox.showinfo("Límite Alcanzado", "El período Junio-Julio ha alcanzado el límite de solicitudes")
+
